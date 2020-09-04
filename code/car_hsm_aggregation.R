@@ -6,6 +6,7 @@ AGGREGATED_DATASET <- "output/car_msna_ki_aggregated.csv"
 ####################################
 library(tidyverse)
 library(readxl)
+library(composr)
 
 # Function to aggregate results for questions where one response is preferred over other responses
 
@@ -103,18 +104,18 @@ localite_data <- oui_localite_data %>%
 
 localite_data <- localite_data %>%
   mutate(ig_2_chocpop_why = ifelse(ig_2_chocpop == "oui", ig_2_chocpop_why, NA),
-         ig_3_groupop_pourcentage_1 = ifelse(ig_3_groupop == "hote", ig_3_groupop_pourcentage_1, NA),
-         ig_3_groupop_pourcentage_2 = ifelse(ig_3_groupop == "IDP_site", ig_3_groupop_pourcentage_2, NA),
-         ig_3_groupop_pourcentage_3 = ifelse(ig_3_groupop == "IDP_FA", ig_3_groupop_pourcentage_3, NA),
-         ig_3_groupop_pourcentage_4 = ifelse(ig_3_groupop == "retourne", ig_3_groupop_pourcentage_4, NA),
-         ig_3_groupop_pourcentage_5 = ifelse(ig_3_groupop == "rapatrie", ig_3_groupop_pourcentage_5, NA),
-         ig_4_raison_idp = ifelse(ig_3_groupop %in% c("IDP_site","IDP_FA"), ig_4_raison_idp, NA),
-         ig_5_choix_idp = ifelse(ig_3_groupop %in% c("IDP_site","IDP_FA"), ig_5_choix_idp, NA),
-         ig_6_duree_idp = ifelse(ig_3_groupop %in% c("IDP_site","IDP_FA"), ig_6_duree_idp, NA),
-         ig_7_raisonretour_idp = ifelse(ig_3_groupop %in% c("IDP_site","IDP_FA"), ig_7_raisonretour_idp, NA),
-         ig_8_raison_ret_rapat = ifelse(ig_3_groupop %in% c("retourne","rapatrie"), ig_8_raison_ret_rap, NA),
-         ig_9_destinationfinale_perc = ifelse(ig_3_groupop %in% c("retourne","rapatrie"), ig_9_destinationfinale_perc, NA),
-         ig_10_destinationfinale_raison = ifelse(ig_3_groupop %in% c("retourne","rapatrie") & ig_9_destinationfinale_perc != 'ret_rap_destfinale_0', ig_10_destinationfinale_raison, NA),
+         ig_3_groupop_pourcentage_1 = ifelse(sm_selected(ig_3_groupop,any = c("hote")), ig_3_groupop_pourcentage_1, NA),
+         ig_3_groupop_pourcentage_2 = ifelse(sm_selected(ig_3_groupop,any = c("IDP_site")), ig_3_groupop_pourcentage_2, NA),
+         ig_3_groupop_pourcentage_3 = ifelse(sm_selected(ig_3_groupop,any = c("IDP_FA")), ig_3_groupop_pourcentage_3, NA),
+         ig_3_groupop_pourcentage_4 = ifelse(sm_selected(ig_3_groupop,any = c("retourne")), ig_3_groupop_pourcentage_4, NA),
+         ig_3_groupop_pourcentage_5 = ifelse(sm_selected(ig_3_groupop,any = c("rapatrie")),ig_3_groupop_pourcentage_5, NA),
+         ig_4_raison_idp = ifelse(sm_selected(ig_3_groupop,any = c("IDP_site","IDP_FA")), ig_4_raison_idp, NA),
+         ig_5_choix_idp = ifelse(sm_selected(ig_3_groupop,any = c("IDP_site","IDP_FA")), ig_5_choix_idp, NA),
+         ig_6_duree_idp = ifelse(sm_selected(ig_3_groupop,any = c("IDP_site","IDP_FA")), ig_6_duree_idp, NA),
+         ig_7_raisonretour_idp = ifelse(sm_selected(ig_3_groupop,any = c("IDP_site","IDP_FA")), ig_7_raisonretour_idp, NA),
+         ig_8_raison_ret_rapat = ifelse(sm_selected(ig_3_groupop,any = c("retourne","rapatrie")), ig_8_raison_ret_rapat, NA),
+         ig_9_destinationfinale_perc = ifelse(sm_selected(ig_3_groupop,any = c("retourne","rapatrie")), ig_9_destinationfinale_perc, NA),
+         ig_10_destinationfinale_raison = ifelse(sm_selected(ig_3_groupop,any = c("retourne","rapatrie"))& ig_9_destinationfinale_perc != 'ret_rap_destfinale_0', ig_10_destinationfinale_raison, NA),
          abri_2_pourcentage_1 = ifelse(abri_1_type != "nsp" & abri_1_type == "maison_dur_finie", abri_2_pourcentage_1, NA),
          abri_2_pourcentage_2 = ifelse(abri_1_type != "nsp" & abri_1_type == "maison_dur_non_finie", abri_2_pourcentage_2, NA),
          abri_2_pourcentage_3 = ifelse(abri_1_type != "nsp" & abri_1_type == "maison_semi_dur", abri_2_pourcentage_3, NA),
