@@ -1,6 +1,6 @@
 ##### ADJUST ONLY THE CODE HERE ####
 ##### UNLESS THE TOOL HAS CHANGED ##
-CLEANED_DATASET <- "input/CAR_MSNA2020_KI_H2R_dataset.xlsm"
+CLEANED_DATASET <- "input/CAR_MSNA2020_KI_H2R_dataset_validated.xlsm"
 AGGREGATED_DATASET <- "output/car_msna_ki_aggregated.csv"
 # install.packages("readxl")
 ####################################
@@ -108,12 +108,12 @@ localite_data <- localite_data %>%
          ig_3_groupop_pourcentage_3 = ifelse(ig_3_groupop == "IDP_FA", ig_3_groupop_pourcentage_3, NA),
          ig_3_groupop_pourcentage_4 = ifelse(ig_3_groupop == "retourne", ig_3_groupop_pourcentage_4, NA),
          ig_3_groupop_pourcentage_5 = ifelse(ig_3_groupop == "rapatrie", ig_3_groupop_pourcentage_5, NA),
-         ig_4_raison_idp = ifelse(ig_3_groupop == "IDP_site"|ig_3_groupop == "IDP_FA", ig_4_raison_idp, NA),
-         ig_5_choix_idp = ifelse(ig_3_groupop == "IDP_site"|ig_3_groupop == "IDP_FA", ig_5_choix_idp, NA),
-         ig_6_duree_idp = ifelse(ig_3_groupop == "IDP_site"|ig_3_groupop == "IDP_FA", ig_6_duree_idp, NA),
-         ig_7_raisonretour_idp = ifelse(ig_3_groupop == "IDP_site"|ig_3_groupop == "IDP_FA", ig_7_raisonretour_idp, NA),
-         ig_8_raison_ret_rapat = ifelse(ig_3_groupop == "retourne"|ig_3_groupop == "rapatrie", ig_8_raison_ret_rap, NA),
-         ig_9_destinationfinale_perc = ifelse(ig_3_groupop == "retourne"|ig_3_groupop == "rapatrie", ig_9_destinationfinale_perc, NA),
+         ig_4_raison_idp = ifelse(ig_3_groupop %in% c("IDP_site","IDP_FA"), ig_4_raison_idp, NA),
+         ig_5_choix_idp = ifelse(ig_3_groupop %in% c("IDP_site","IDP_FA"), ig_5_choix_idp, NA),
+         ig_6_duree_idp = ifelse(ig_3_groupop %in% c("IDP_site","IDP_FA"), ig_6_duree_idp, NA),
+         ig_7_raisonretour_idp = ifelse(ig_3_groupop %in% c("IDP_site","IDP_FA"), ig_7_raisonretour_idp, NA),
+         ig_8_raison_ret_rapat = ifelse(ig_3_groupop %in% c("retourne","rapatrie"), ig_8_raison_ret_rap, NA),
+         ig_9_destinationfinale_perc = ifelse(ig_3_groupop %in% c("retourne","rapatrie"), ig_9_destinationfinale_perc, NA),
          ig_10_destinationfinale_raison = ifelse(ig_3_groupop %in% c("retourne","rapatrie") & ig_9_destinationfinale_perc != 'ret_rap_destfinale_0', ig_10_destinationfinale_raison, NA),
          abri_2_pourcentage_1 = ifelse(abri_1_type != "nsp" & abri_1_type == "maison_dur_finie", abri_2_pourcentage_1, NA),
          abri_2_pourcentage_2 = ifelse(abri_1_type != "nsp" & abri_1_type == "maison_dur_non_finie", abri_2_pourcentage_2, NA),
