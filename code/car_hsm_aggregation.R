@@ -1,7 +1,7 @@
 ##### ADJUST ONLY THE CODE HERE ####
 ##### UNLESS THE TOOL HAS CHANGED ##
 CLEANED_DATASET <- "input/CAR_MSNA2020_KI_H2R_dataset_validated.xlsm"
-AGGREGATED_DATASET <- "output/car_msna_ki_aggregated.csv"
+AGGREGATED_DATASET <- paste0("output/car_msna_ki_aggregated_",lubridate::today(),".csv")
 # install.packages("readxl")
 ####################################
 library(tidyverse)
@@ -11,6 +11,7 @@ library(composr)
 # Function to aggregate results for questions where one response is preferred over other responses
 
 hsm_preferred_response <- function(x, type, preferred_response) {
+  type <- type[which(!is.na(x))]
   x <- x[!is.na(x)]
   if (preferred_response %in% x[type %in% c("vit_localite", "visite_localite")]) {
     return(preferred_response)
@@ -36,6 +37,7 @@ hsm_preferred_response <- function(x, type, preferred_response) {
 # Generic mode function that takes into account KI type
 
 hsm_mode <- function(x, type) {
+  type <- type[which(!is.na(x))]
   x <- x[!is.na(x)]
   ux <- unique(x)
   table <- tabulate(match(x, ux))
@@ -60,7 +62,7 @@ hsm_mode <- function(x, type) {
 '%!in%' = Negate('%in%')
 
 #Reading data and form
-data <- read_xlsx(CLEANED_DATASET, sheet = "Clean Data")
+data <- read_xlsx(CLEANED_DATASET, sheet = "Clean Data", na = c(""," ",NA,999))
 names(data)<-gsub("[/]",".",names(data))
 
 # Template dataset to merge at the end
@@ -70,6 +72,27 @@ template_data <- data[0,]
 data <- data %>%
   select(everything(), -ends_with("_autre"))
 
+
+data <- data %>% mutate(
+  ig_3_groupop_pourcentage_1 = ifelse(ig_3_groupop_pourcentage_somme != "100",NA,ig_3_groupop_pourcentage_1),
+  ig_3_groupop_pourcentage_2 = ifelse(ig_3_groupop_pourcentage_somme != "100",NA,ig_3_groupop_pourcentage_2),
+  ig_3_groupop_pourcentage_3 = ifelse(ig_3_groupop_pourcentage_somme != "100",NA,ig_3_groupop_pourcentage_3),
+  ig_3_groupop_pourcentage_4 = ifelse(ig_3_groupop_pourcentage_somme != "100",NA,ig_3_groupop_pourcentage_4),
+  ig_3_groupop_pourcentage_5 = ifelse(ig_3_groupop_pourcentage_somme != "100",NA,ig_3_groupop_pourcentage_5),
+  abri_2_pourcentage_1 = ifelse(abri_2_pourcentage_somme != "100",NA,abri_2_pourcentage_1),
+  abri_2_pourcentage_2 = ifelse(abri_2_pourcentage_somme != "100",NA,abri_2_pourcentage_2),
+  abri_2_pourcentage_3 = ifelse(abri_2_pourcentage_somme != "100",NA,abri_2_pourcentage_3),
+  abri_2_pourcentage_4 = ifelse(abri_2_pourcentage_somme != "100",NA,abri_2_pourcentage_4),
+  abri_2_pourcentage_5 = ifelse(abri_2_pourcentage_somme != "100",NA,abri_2_pourcentage_5),
+  abri_2_pourcentage_6 = ifelse(abri_2_pourcentage_somme != "100",NA,abri_2_pourcentage_6),
+  abri_2_pourcentage_7 = ifelse(abri_2_pourcentage_somme != "100",NA,abri_2_pourcentage_7),
+  abri_2_pourcentage_8 = ifelse(abri_2_pourcentage_somme != "100",NA,abri_2_pourcentage_8),
+  abri_2_pourcentage_9 = ifelse(abri_2_pourcentage_somme != "100",NA,abri_2_pourcentage_9),
+  abri_2_pourcentage_10 = ifelse(abri_2_pourcentage_somme != "100",NA,abri_2_pourcentage_10),
+  ig_3_groupop_pourcentage_somme = ifelse(ig_3_groupop_pourcentage_somme != "100",NA,ig_3_groupop_pourcentage_somme),
+  abri_2_pourcentage_somme = ifelse(abri_2_pourcentage_somme != "100",NA,abri_2_pourcentage_somme)
+)
+
 # Delete select_multiple text columns (not the binary/logical columns)
 # data <- data %>%
 #   select(everything(), -strategie_survie)
@@ -78,6 +101,11 @@ data <- data %>%
 ques_oui <- c("protec_4_incident", "protec_6_kids_outHH_1",  "protec_6_kids_outHH_2" , "protec_6_kids_outHH_3",
               "protec_6_kids_outHH_4" , "protec_6_kids_outHH_5" , "protec_6_kids_outHH_6" ,
               "protec_6_kids_outHH_7",  "protec_6_kids_outHH_8" , "protec_6_kids_outHH_9" , "protec_6_kids_outHH_10")
+
+proportion_vars <- c("ig_3_groupop_pourcentage_1",	"ig_3_groupop_pourcentage_2",	"ig_3_groupop_pourcentage_3",	"ig_3_groupop_pourcentage_4",	
+                     "ig_3_groupop_pourcentage_5",	"ig_3_groupop_pourcentage_somme","abri_2_pourcentage_1"	,
+                     "abri_2_pourcentage_2",	"abri_2_pourcentage_3",	"abri_2_pourcentage_4",	"abri_2_pourcentage_5",	"abri_2_pourcentage_6",	
+                     "abri_2_pourcentage_7",	"abri_2_pourcentage_8",	"abri_2_pourcentage_9",	"abri_2_pourcentage_10",	"abri_2_pourcentage_somme")
 
 # Questions that are always non
 # ques_non <- c("sentiment_securite")
@@ -91,14 +119,48 @@ oui_localite_data <- data %>%
 #   group_by(info_prefecture_H2R, info_sous_prefecture_H2R, info_commune_H2R, info_loc_H2R) %>%
 #   summarize_at(vars(ques_non), ~hsm_preferred_response(., .data[["source_info_localite"]], "non"))
 
-autre_localite_data <- data %>%
-  group_by(info_prefecture_H2R, info_sous_prefecture_H2R, info_commune_H2R, info_loc_H2R) %>%
-  select(ig_2_chocpop:aap_6_retouraide, -one_of(ques_oui)) %>%
-  summarize_all(hsm_mode, .data[["type_contact"]])
+autre_localite_data_names <- data %>%
+  select(info_prefecture_H2R, info_sous_prefecture_H2R, info_commune_H2R, info_loc_H2R, ig_2_chocpop:aap_6_retouraide, -one_of(ques_oui),
+         -one_of(proportion_vars)) %>% names
+
+autre_localite_data<-matrix(NA,length(unique(data$info_loc_H2R)),length(autre_localite_data_names))
+colnames(autre_localite_data)<-autre_localite_data_names
+autre_localite_data<-as.data.frame(autre_localite_data)
+
+autre_localite_data[,c(1:4)]<-data[!duplicated(data[,c("info_prefecture_H2R", "info_sous_prefecture_H2R", "info_commune_H2R", "info_loc_H2R")]),][,c("info_prefecture_H2R", "info_sous_prefecture_H2R", "info_commune_H2R", "info_loc_H2R")]
+
+for(i in 5:length(autre_localite_data)){
+  for(j in 1:nrow(autre_localite_data)){
+    autre_localite_data[j,i]<-hsm_mode(x = data[[names(autre_localite_data)[i]]][which(data$info_loc_H2R==autre_localite_data$info_loc_H2R[j])],
+                                       type = data$type_contact[which(data$info_loc_H2R==autre_localite_data$info_loc_H2R[j])])
+  }
+}
+
+numerical_data_names <- data %>%
+  select(info_prefecture_H2R, info_sous_prefecture_H2R, info_commune_H2R, info_loc_H2R, all_of(proportion_vars)) %>% names
+
+numerical_data<-matrix(NA,length(unique(data$info_loc_H2R)),length(numerical_data_names))
+colnames(numerical_data)<-numerical_data_names
+numerical_data<-as.data.frame(numerical_data)
+
+numerical_data[,c(1:4)]<-data[!duplicated(data[,c("info_prefecture_H2R", "info_sous_prefecture_H2R", "info_commune_H2R", "info_loc_H2R")]),][,c("info_prefecture_H2R", "info_sous_prefecture_H2R", "info_commune_H2R", "info_loc_H2R")]
+
+for(i in 5:length(numerical_data)){
+  for(j in 1:nrow(numerical_data)){
+    numerical_data[j,i]<- as.character(round(mean(as.numeric(data[[names(numerical_data)[i]]][which(data$info_loc_H2R==numerical_data$info_loc_H2R[j])]),na.rm = T)))
+  }
+}
+
+
+# autre_localite_data <- data %>%
+#   group_by(info_prefecture_H2R, info_sous_prefecture_H2R, info_commune_H2R, info_loc_H2R) %>%
+#   select(ig_2_chocpop:aap_6_retouraide, -one_of(ques_oui)) %>%
+#   summarize_all(hsm_mode, .data[["type_contact"]])
 
 # Aggregating all data
 localite_data <- oui_localite_data %>%
-  left_join(autre_localite_data, by = c("info_prefecture_H2R", "info_sous_prefecture_H2R", "info_commune_H2R", "info_loc_H2R"))
+  left_join(autre_localite_data, by = c("info_prefecture_H2R", "info_sous_prefecture_H2R", "info_commune_H2R", "info_loc_H2R")) %>%
+  left_join(numerical_data,by = c("info_prefecture_H2R", "info_sous_prefecture_H2R", "info_commune_H2R", "info_loc_H2R"))
 
 ### NOW WE WANT TO CORRECT FOR SKIP LOGIC ###
 
@@ -116,16 +178,16 @@ localite_data <- localite_data %>%
          ig_8_raison_ret_rapat = ifelse(sm_selected(ig_3_groupop,any = c("retourne","rapatrie")), ig_8_raison_ret_rapat, NA),
          ig_9_destinationfinale_perc = ifelse(sm_selected(ig_3_groupop,any = c("retourne","rapatrie")), ig_9_destinationfinale_perc, NA),
          ig_10_destinationfinale_raison = ifelse(sm_selected(ig_3_groupop,any = c("retourne","rapatrie"))& ig_9_destinationfinale_perc != 'ret_rap_destfinale_0', ig_10_destinationfinale_raison, NA),
-         abri_2_pourcentage_1 = ifelse(abri_1_type != "nsp" & abri_1_type == "maison_dur_finie", abri_2_pourcentage_1, NA),
-         abri_2_pourcentage_2 = ifelse(abri_1_type != "nsp" & abri_1_type == "maison_dur_non_finie", abri_2_pourcentage_2, NA),
-         abri_2_pourcentage_3 = ifelse(abri_1_type != "nsp" & abri_1_type == "maison_semi_dur", abri_2_pourcentage_3, NA),
-         abri_2_pourcentage_4 = ifelse(abri_1_type != "nsp" & abri_1_type == "habitat_paille", abri_2_pourcentage_4, NA),
-         abri_2_pourcentage_5 = ifelse(abri_1_type != "nsp" & abri_1_type == "abri_collectif", abri_2_pourcentage_5, NA),
-         abri_2_pourcentage_6 = ifelse(abri_1_type != "nsp" & abri_1_type == "tente", abri_2_pourcentage_6, NA),
-         abri_2_pourcentage_7 = ifelse(abri_1_type != "nsp" & abri_1_type == "abri_urgence_bache", abri_2_pourcentage_7, NA),
-         abri_2_pourcentage_8 = ifelse(abri_1_type != "nsp" & abri_1_type == "abri_urgence_paille", abri_2_pourcentage_8, NA),
-         abri_2_pourcentage_9 = ifelse(abri_1_type != "nsp" & abri_1_type == "aucun", abri_2_pourcentage_9, NA),
-         abri_2_pourcentage_10 = ifelse(abri_1_type != "nsp" & abri_1_type == "autre", abri_2_pourcentage_10, NA),
+         abri_2_pourcentage_1 = ifelse(abri_1_type.nsp == 0 & abri_1_type.maison_dur_finie == 1, abri_2_pourcentage_1, NA),
+         abri_2_pourcentage_2 = ifelse(abri_1_type.nsp == 0 & abri_1_type.maison_dur_non_finie == 1, abri_2_pourcentage_2, NA),
+         abri_2_pourcentage_3 = ifelse(abri_1_type.nsp == 0 & abri_1_type.maison_semi_dur == 1, abri_2_pourcentage_3, NA),
+         abri_2_pourcentage_4 = ifelse(abri_1_type.nsp == 0 & abri_1_type.habitat_paille == 1, abri_2_pourcentage_4, NA),
+         abri_2_pourcentage_5 = ifelse(abri_1_type.nsp == 0 & abri_1_type.abri_collectif == 1, abri_2_pourcentage_5, NA),
+         abri_2_pourcentage_6 = ifelse(abri_1_type.nsp == 0 & abri_1_type.tente == 1, abri_2_pourcentage_6, NA),
+         abri_2_pourcentage_7 = ifelse(abri_1_type.nsp == 0 & abri_1_type.abri_urgence_bache == 1, abri_2_pourcentage_7, NA),
+         abri_2_pourcentage_8 = ifelse(abri_1_type.nsp == 0 & abri_1_type.abri_urgence_paille == 1, abri_2_pourcentage_8, NA),
+         abri_2_pourcentage_9 = ifelse(abri_1_type.nsp == 0 & abri_1_type.aucun == 1, abri_2_pourcentage_9, NA),
+         abri_2_pourcentage_10 = ifelse(abri_1_type.nsp == 0 & abri_1_type.autre == 1, abri_2_pourcentage_10, NA),
          abri_4_problem_2 = ifelse(abri_4_problem_1 %!in% c("nsp","aucun"), abri_4_problem_2, NA),
          abri_4_problem_3 = ifelse(abri_4_problem_1 %!in% c("nsp","aucun") & abri_4_problem_2 %!in% c("nsp","aucun"), abri_4_problem_3, NA),
          abri_5_damage_2 = ifelse(abri_5_damage_1 %!in% c("nsp","aucun"), abri_5_damage_2, NA),
@@ -167,7 +229,11 @@ localite_data <- localite_data %>%
 # SAVING FINAL DATA
 
 final_data <- bind_rows(template_data, localite_data)
+final_data <- final_data %>% replace_with_na_all(condition = ~is.nan(.x))
+final_data <- final_data %>% replace_with_na_all(condition = ~.x == "NaN")
+final_data <- final_data %>% select_if(~ !(all(is.na(.x)) | all(. == "")))
 
 # write_csv(final_data, AGGREGATED_DATASET, na = "")
-write.csv(final_data, AGGREGATED_DATASET, na = "")
+write.csv(final_data, AGGREGATED_DATASET, na = "",row.names = F)
+write.csv(parent_created, AGGREGATED_DATASET, na = "",row.names = F)
 
