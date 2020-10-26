@@ -4,7 +4,7 @@ library(stringr)
 
 
 data <- read_excel("data/data.xlsx")
-data_short_names <- parent_created
+data_short_names <- data
 
 recode_df <- read_excel("./input/Questionnaire_Kobo__MSNA2020_ki_final2.xlsx", sheet = "choices")
 
